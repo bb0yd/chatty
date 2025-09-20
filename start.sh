@@ -20,5 +20,10 @@ fi
 # Disable system beep
 xset -b 2>/dev/null || true
 
-# Run Chatty
-python3 src/chatty.py
+# Run Chatty with debug flag if provided
+if [ "$1" = "--debug" ]; then
+    echo "🔧 Running in debug mode..."
+    python3 src/chatty.py --debug
+else
+    python3 src/chatty.py
+fi

@@ -11,6 +11,7 @@ import time
 import math
 import random
 import os
+import sys
 from datetime import datetime
 from vosk import Model, KaldiRecognizer
 import sounddevice as sd
@@ -21,8 +22,9 @@ import subprocess
 from pynput import keyboard
 
 class Chatty:
-    def __init__(self, root):
+    def __init__(self, root, debug_mode=False):
         self.root = root
+        self.debug_mode = debug_mode
         self.setup_window()
         self.setup_variables()
         self.setup_ui()
@@ -31,10 +33,15 @@ class Chatty:
         self.setup_hotkeys()
         self.start_animation()
 
+    def debug_print(self, message):
+        """Print debug messages only if debug mode is enabled"""
+        if self.debug_mode:
+            print(message)
+
     def setup_window(self):
         """Configure the main window"""
         self.root.title("🎙️ Chatty")
-        self.root.geometry("220x140")
+        self.root.geometry("220x120")  # Reduced height since we removed the title
         self.root.configure(bg='#1a1a1a')
         self.root.resizable(False, False)
 
@@ -82,45 +89,37 @@ class Chatty:
         self.model = None  # Initialize to None
         try:
             self.model = Model(model_path)
-            print("✓ Vosk model loaded successfully")
+            self.debug_print("✓ Vosk model loaded successfully")
         except Exception as e:
-            print(f"❌ Error loading model: {e}")
-            print(f"❌ Attempted model path: {model_path}")
-            print(f"❌ Model directory exists: {os.path.exists(model_path)}")
+            self.debug_print(f"❌ Error loading model: {e}")
+            self.debug_print(f"❌ Attempted model path: {model_path}")
+            self.debug_print(f"❌ Model directory exists: {os.path.exists(model_path)}")
             if os.path.exists(project_root):
-                print(f"❌ Project root contents: {os.listdir(project_root)}")
+                self.debug_print(f"❌ Project root contents: {os.listdir(project_root)}")
             return
 
     def setup_ui(self):
         """Create the compact interface"""
-        # Main container with minimal padding
+        # Main container with improved padding
         main_frame = tk.Frame(self.root, bg='#1a1a1a')
-        main_frame.pack(fill='both', expand=True, padx=8, pady=8)
+        main_frame.pack(fill='both', expand=True, padx=12, pady=12)
 
-        # Compact title
-        title_label = tk.Label(main_frame,
-                              text="Chatty",
-                              bg='#1a1a1a',
-                              fg='#ffffff',
-                              font=('Arial', 14, 'bold'))
-        title_label.pack(pady=(0, 5))
-
-        # Compact animated dots container
+        # Animated dots container - centered and with better spacing
         dots_frame = tk.Frame(main_frame, bg='#1a1a1a')
-        dots_frame.pack(pady=(0, 5))
+        dots_frame.pack(pady=(8, 12))
 
         self.dots_canvas = tk.Canvas(dots_frame,
                                    width=120, height=40,
                                    bg='#1a1a1a', highlightthickness=0)
         self.dots_canvas.pack()
 
-        # Compact status text
+        # Status text with better spacing
         self.status_label = tk.Label(main_frame,
                                    text="Ctrl: start",
                                    bg='#1a1a1a',
                                    fg='#888888',
                                    font=('Arial', 9))
-        self.status_label.pack()
+        self.status_label.pack(pady=(0, 4))
 
         # Transcription text area (compact, hidden initially)
         self.text_frame = tk.Frame(main_frame, bg='#2a2a2a', relief='solid', bd=1)
@@ -141,7 +140,7 @@ class Chatty:
     def audio_callback(self, indata, frames, time, status):
         """Audio stream callback with dot animation data"""
         if status:
-            print(f"Audio stream error: {status}")
+            self.debug_print(f"Audio stream error: {status}")
 
         # Calculate audio levels for each dot
         audio_data = np.frombuffer(indata, dtype=np.float32)
@@ -171,24 +170,24 @@ class Chatty:
                 callback=self.audio_callback
             )
             self.audio_stream.start()
-            print("✓ Audio stream initialized")
+            self.debug_print("✓ Audio stream initialized")
         except Exception as e:
-            print(f"❌ Audio stream error: {e}")
+            self.debug_print(f"❌ Audio stream error: {e}")
 
     def start_recording(self):
         """Start audio recording"""
         if not self.recording:
             self.recording = True
             self.audio_buffer = []
-            self.update_status("Listening...", '#00ff88')
-            print("🎤 Recording started")
+            self.update_status("Listening...", '#4A9EFF')  # Professional blue instead of green
+            self.debug_print("🎤 Recording started")
 
     def stop_recording(self):
         """Stop recording and process audio"""
         if self.recording:
             self.recording = False
             self.update_status("Processing...", '#ffaa00')
-            print("⏹️ Recording stopped")
+            self.debug_print("⏹️ Recording stopped")
 
             # Process in separate thread
             threading.Thread(target=self.process_audio, daemon=True).start()
@@ -204,18 +203,18 @@ class Chatty:
         """Process recorded audio and transcribe"""
         if not self.audio_buffer:
             self.update_status("Ctrl: start", '#888888')
-            print("No audio recorded")
+            self.debug_print("No audio recorded")
             return
 
         # Check if model is loaded
         if self.model is None:
-            print("❌ Cannot transcribe: Model not loaded")
+            self.debug_print("❌ Cannot transcribe: Model not loaded")
             self.update_status("Model not loaded!", '#ff0000')
             time.sleep(2)
             self.update_status("Ctrl: start", '#888888')
             return
 
-        print("🔍 Transcribing...")
+        self.debug_print("🔍 Transcribing...")
 
         # Convert to format expected by Vosk
         audio_array = np.array(self.audio_buffer, dtype=np.float32)
@@ -235,7 +234,7 @@ class Chatty:
 
             if text.strip():
                 final_text = text.strip()
-                print(f"📝 Transcribed: '{final_text}'")
+                self.debug_print(f"📝 Transcribed: '{final_text}'")
 
                 # Show the transcribed text and auto-copy
                 self.show_text(final_text)
@@ -244,13 +243,13 @@ class Chatty:
                 threading.Thread(target=self.auto_copy_after_delay, daemon=True).start()
 
             else:
-                print("🔇 No speech detected")
+                self.debug_print("🔇 No speech detected")
                 self.update_status("No speech. Try again.", '#ff6600')
                 time.sleep(2)
                 self.update_status("Ctrl: start", '#888888')
 
         except Exception as e:
-            print(f"❌ Transcription error: {e}")
+            self.debug_print(f"❌ Transcription error: {e}")
             self.update_status("Error. Try again.", '#ff0000')
             time.sleep(2)
             self.update_status("Ctrl: start", '#888888')
@@ -268,7 +267,7 @@ class Chatty:
         self.current_text = ""
         self.text_frame.pack_forget()
         self.update_status("Ctrl: start", '#888888')
-        print("🗑️ Text cleared")
+        self.debug_print("🗑️ Text cleared")
 
     def auto_copy_after_delay(self):
         """Auto-copy text after showing it briefly"""
@@ -282,7 +281,7 @@ class Chatty:
             try:
                 # Copy to clipboard first
                 pyperclip.copy(self.current_text)
-                print(f"📋 Copied to clipboard: '{self.current_text}'")
+                self.debug_print(f"📋 Copied to clipboard: '{self.current_text}'")
 
                 # Simple approach: just type the text directly
                 # Give a small delay to ensure our window isn't capturing the keystroke
@@ -291,26 +290,26 @@ class Chatty:
                 # Type the text character by character for better reliability
                 subprocess.run(['xdotool', 'type', '--delay', '50', self.current_text], check=True)
 
-                print("✓ Text pasted to cursor location")
-                self.update_status("Text pasted!", '#00ff88')
+                self.debug_print("✓ Text pasted to cursor location")
+                self.update_status("Text pasted!", '#4A9EFF')  # Use blue instead of green
 
                 # Clear after successful copy
                 time.sleep(1)
                 self.clear_text()
 
             except subprocess.CalledProcessError as e:
-                print(f"❌ xdotool failed: {e}")
+                self.debug_print(f"❌ xdotool failed: {e}")
                 # Fallback: just keep in clipboard
                 try:
                     pyperclip.copy(self.current_text)
                     self.update_status("Copied to clipboard - paste with Ctrl+V", '#ffaa00')
-                    print("💡 Text is in clipboard, paste manually with Ctrl+V")
+                    self.debug_print("💡 Text is in clipboard, paste manually with Ctrl+V")
                 except:
                     self.update_status("Copy failed", '#ff0000')
-                    print("❌ Clipboard copy also failed")
+                    self.debug_print("❌ Clipboard copy also failed")
 
             except Exception as e:
-                print(f"❌ Unexpected error: {e}")
+                self.debug_print(f"❌ Unexpected error: {e}")
                 self.update_status("Error - text copied to clipboard", '#ff6600')
 
     def update_status(self, text, color='#888888'):
@@ -351,7 +350,7 @@ class Chatty:
 
             # Color based on state
             if self.recording:
-                color = '#00ff88'  # Green when recording
+                color = '#4A9EFF'  # Professional blue when recording
             else:
                 color = '#666666'  # Gray when idle
 
@@ -416,7 +415,7 @@ class Chatty:
             on_release=on_key_release
         )
         self.keyboard_listener.start()
-        print("✓ Global hotkey listener started")
+        self.debug_print("✓ Global hotkey listener started")
 
     def on_closing(self):
         """Handle window closing"""
@@ -430,8 +429,29 @@ class Chatty:
 
 def main():
     """Main function"""
+    import argparse
+    
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Chatty - Voice-to-Text application')
+    parser.add_argument('--debug', action='store_true', 
+                       help='Enable debug mode (shows console output)')
+    args = parser.parse_args()
+    
+    # Hide console window on Windows unless debug mode is enabled
+    if not args.debug and sys.platform == "win32":
+        import ctypes
+        ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
+    
+    # Suppress print output unless in debug mode
+    if not args.debug:
+        # Redirect stdout and stderr to devnull
+        import os
+        devnull = open(os.devnull, 'w')
+        sys.stdout = devnull
+        sys.stderr = devnull
+    
     root = tk.Tk()
-    app = Chatty(root)
+    app = Chatty(root, debug_mode=args.debug)
 
     # Handle window closing
     root.protocol("WM_DELETE_WINDOW", app.on_closing)
