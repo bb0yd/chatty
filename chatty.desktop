@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Chatty
+Comment=Voice-to-Text application with real-time animated interface
+Exec=INSTALL_PATH/start.sh
+Icon=INSTALL_PATH/chatty.svg
+Terminal=false
+Type=Application
+Categories=AudioVideo;Audio;
+StartupNotify=true
+StartupWMClass=Chatty

@@ -36,8 +36,25 @@ fi
 # Make scripts executable
 chmod +x start.sh
 
+# Install desktop file for GUI launcher
+echo "🖥️ Installing desktop launcher..."
+INSTALL_DIR="$(pwd)"
+mkdir -p ~/.local/share/applications
+
+# Create desktop file with correct paths
+sed "s|INSTALL_PATH|$INSTALL_DIR|g" chatty.desktop > ~/.local/share/applications/chatty.desktop
+chmod +x ~/.local/share/applications/chatty.desktop
+
+# Update desktop database if available
+if command -v update-desktop-database &> /dev/null; then
+    update-desktop-database ~/.local/share/applications/ 2>/dev/null || true
+fi
+
+echo "✓ Desktop launcher installed"
+
 echo ""
 echo "✅ Installation complete!"
 echo ""
 echo "To run Chatty:"
 echo "  ./start.sh"
+echo "  or click the Chatty icon in your applications menu"
