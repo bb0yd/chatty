@@ -11,8 +11,8 @@ sudo apt install -y python3 python3-pip python3-venv python3-tk xdotool xclip po
 
 # Create virtual environment
 echo "🐍 Creating Python virtual environment..."
-python3 -m venv whisper_env
-source whisper_env/bin/activate
+python3 -m venv chatty
+source chatty/bin/activate
 
 # Install Python packages
 echo "📦 Installing Python packages..."

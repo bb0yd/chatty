@@ -71,7 +71,7 @@ class Chatty:
 
     def setup_model(self):
         """Load the Vosk model"""
-        model_path = "../vosk_model/vosk-model-small-en-us-0.15"
+        model_path = "vosk_model/vosk-model-small-en-us-0.15"
         try:
             self.model = Model(model_path)
             print("✓ Vosk model loaded successfully")

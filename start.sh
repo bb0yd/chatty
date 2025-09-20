@@ -4,7 +4,7 @@
 echo "🎙️ Starting Chatty..."
 
 # Activate virtual environment
-source whisper_env/bin/activate
+source chatty/bin/activate
 
 # Check if model exists
 if [ ! -d "vosk_model/vosk-model-small-en-us-0.15" ]; then
