@@ -4,10 +4,12 @@ Voice-to-text application with real-time animated interface.
 
 ## Features
 
+- **Compact Interface** - Small 220×140 window positioned in top-right corner
 - **Animated Interface** - 4 bouncing dots that react to voice levels
 - **Simple Controls** - Just use Ctrl key to toggle recording
 - **Auto-paste** - Transcribed text automatically types at cursor location
 - **Offline** - Uses Vosk for local speech recognition
+- **Always on Top** - Stays visible above other windows
 
 ## Quick Start
 

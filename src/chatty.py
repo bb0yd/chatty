@@ -33,17 +33,18 @@ class Chatty:
     def setup_window(self):
         """Configure the main window"""
         self.root.title("🎙️ Chatty")
-        self.root.geometry("500x400")
+        self.root.geometry("220x140")
         self.root.configure(bg='#1a1a1a')
         self.root.resizable(False, False)
 
         # Make window stay on top
         self.root.attributes('-topmost', True)
 
-        # Center the window
+        # Position in top-right corner with small margin
+        screen_width = self.root.winfo_screenwidth()
         self.root.geometry("+{}+{}".format(
-            (self.root.winfo_screenwidth() // 2) - 250,
-            (self.root.winfo_screenheight() // 2) - 200
+            screen_width - 240,  # 220 width + 20 margin from right edge
+            20  # 20 pixels from top
         ))
 
     def setup_variables(self):
@@ -79,69 +80,51 @@ class Chatty:
             return
 
     def setup_ui(self):
-        """Create the ChatGPT-style interface"""
-        # Main container
+        """Create the compact interface"""
+        # Main container with minimal padding
         main_frame = tk.Frame(self.root, bg='#1a1a1a')
-        main_frame.pack(fill='both', expand=True, padx=30, pady=30)
+        main_frame.pack(fill='both', expand=True, padx=8, pady=8)
 
-        # Title
+        # Compact title
         title_label = tk.Label(main_frame,
                               text="Chatty",
                               bg='#1a1a1a',
                               fg='#ffffff',
-                              font=('Arial', 28, 'normal'))
-        title_label.pack(pady=(0, 20))
+                              font=('Arial', 14, 'bold'))
+        title_label.pack(pady=(0, 5))
 
-        # Status text
-        self.status_label = tk.Label(main_frame,
-                                   text="Press Ctrl to start",
-                                   bg='#1a1a1a',
-                                   fg='#888888',
-                                   font=('Arial', 12))
-        self.status_label.pack(pady=(0, 40))
-
-        # Animated dots container
+        # Compact animated dots container
         dots_frame = tk.Frame(main_frame, bg='#1a1a1a')
-        dots_frame.pack(pady=(0, 40))
+        dots_frame.pack(pady=(0, 5))
 
         self.dots_canvas = tk.Canvas(dots_frame,
-                                   width=200, height=60,
+                                   width=120, height=40,
                                    bg='#1a1a1a', highlightthickness=0)
         self.dots_canvas.pack()
 
-        # Transcription text area (initially hidden)
+        # Compact status text
+        self.status_label = tk.Label(main_frame,
+                                   text="Ctrl: start",
+                                   bg='#1a1a1a',
+                                   fg='#888888',
+                                   font=('Arial', 9))
+        self.status_label.pack()
+
+        # Transcription text area (compact, hidden initially)
         self.text_frame = tk.Frame(main_frame, bg='#2a2a2a', relief='solid', bd=1)
 
-        # Custom font for text
-        self.text_font = tkFont.Font(family='Arial', size=14)
+        # Compact font for text
+        self.text_font = tkFont.Font(family='Arial', size=10)
 
         self.text_label = tk.Label(self.text_frame,
                                  text="",
                                  bg='#2a2a2a',
                                  fg='#ffffff',
                                  font=self.text_font,
-                                 wraplength=420,
+                                 wraplength=200,
                                  justify='left',
                                  anchor='nw')
-        self.text_label.pack(padx=20, pady=15)
-
-        # Instructions
-        instructions_frame = tk.Frame(main_frame, bg='#1a1a1a')
-        instructions_frame.pack(side='bottom', fill='x')
-
-        instructions = [
-            "Ctrl: Start recording",
-            "Ctrl: Stop recording (auto-copies to cursor)",
-            "Escape: Cancel/clear text"
-        ]
-
-        for instruction in instructions:
-            label = tk.Label(instructions_frame,
-                           text=instruction,
-                           bg='#1a1a1a',
-                           fg='#666666',
-                           font=('Arial', 9))
-            label.pack()
+        self.text_label.pack(padx=8, pady=8)
 
     def audio_callback(self, indata, frames, time, status):
         """Audio stream callback with dot animation data"""
@@ -208,7 +191,7 @@ class Chatty:
     def process_audio(self):
         """Process recorded audio and transcribe"""
         if not self.audio_buffer:
-            self.update_status("Press Ctrl to start", '#888888')
+            self.update_status("Ctrl: start", '#888888')
             print("No audio recorded")
             return
 
@@ -236,35 +219,35 @@ class Chatty:
 
                 # Show the transcribed text and auto-copy
                 self.show_text(final_text)
-                self.update_status("Auto-copying to cursor...", '#ffaa00')
+                self.update_status("Auto-copying...", '#ffaa00')
                 # Auto-copy after a brief delay to show the text
                 threading.Thread(target=self.auto_copy_after_delay, daemon=True).start()
 
             else:
                 print("🔇 No speech detected")
-                self.update_status("No speech detected. Try again.", '#ff6600')
+                self.update_status("No speech. Try again.", '#ff6600')
                 time.sleep(2)
-                self.update_status("Press Ctrl to start", '#888888')
+                self.update_status("Ctrl: start", '#888888')
 
         except Exception as e:
             print(f"❌ Transcription error: {e}")
-            self.update_status("Error occurred. Try again.", '#ff0000')
+            self.update_status("Error. Try again.", '#ff0000')
             time.sleep(2)
-            self.update_status("Press Ctrl to start", '#888888')
+            self.update_status("Ctrl: start", '#888888')
 
     def show_text(self, text):
         """Display transcribed text"""
         self.current_text = text
         self.text_visible = True
         self.text_label.configure(text=text)
-        self.text_frame.pack(fill='x', pady=(0, 20))
+        self.text_frame.pack(fill='x', pady=(0, 5))
 
     def clear_text(self):
         """Clear the displayed text"""
         self.text_visible = False
         self.current_text = ""
         self.text_frame.pack_forget()
-        self.update_status("Press Ctrl to start", '#888888')
+        self.update_status("Ctrl: start", '#888888')
         print("🗑️ Text cleared")
 
     def auto_copy_after_delay(self):
@@ -315,15 +298,15 @@ class Chatty:
         self.status_label.configure(text=text, fg=color)
 
     def draw_animated_dots(self):
-        """Draw ChatGPT-style animated dots"""
+        """Draw compact animated dots"""
         self.dots_canvas.delete("all")
 
-        canvas_width = 200
-        canvas_height = 60
+        canvas_width = 120
+        canvas_height = 40
         center_y = canvas_height // 2
 
-        # 4 dots with spacing
-        dot_spacing = 30
+        # 4 dots with tighter spacing for compact design
+        dot_spacing = 20
         start_x = (canvas_width - (3 * dot_spacing)) // 2
 
         for i in range(4):
@@ -333,18 +316,18 @@ class Chatty:
             x = start_x + (i * dot_spacing)
 
             # Base position with animated offset
-            offset = math.sin((self.frame_count + i * 20) * 0.2) * 2  # Subtle base animation
+            offset = math.sin((self.frame_count + i * 20) * 0.2) * 1.5  # Smaller movement for compact design
             if self.recording:
-                offset += self.audio_levels[i] * 0.3  # Audio-reactive movement
+                offset += self.audio_levels[i] * 0.2  # Reduced audio-reactive movement
 
             y = center_y + offset
 
-            # Dot size based on audio level
-            base_radius = 6
+            # Smaller dot size for compact design
+            base_radius = 4
             if self.recording:
-                radius = base_radius + (self.audio_levels[i] * 0.1)
+                radius = base_radius + (self.audio_levels[i] * 0.08)
             else:
-                radius = base_radius + math.sin((self.frame_count + i * 30) * 0.1) * 0.5
+                radius = base_radius + math.sin((self.frame_count + i * 30) * 0.1) * 0.3
 
             # Color based on state
             if self.recording:
@@ -352,10 +335,10 @@ class Chatty:
             else:
                 color = '#666666'  # Gray when idle
 
-            # Draw dot with glow effect
+            # Draw dot with subtle glow effect
             self.dots_canvas.create_oval(
-                x - radius - 2, y - radius - 2,
-                x + radius + 2, y + radius + 2,
+                x - radius - 1, y - radius - 1,
+                x + radius + 1, y + radius + 1,
                 fill='', outline=color, width=1
             )
 
