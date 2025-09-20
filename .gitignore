@@ -9,6 +9,7 @@ dist/
 build/
 
 # Virtual Environment
+chatty/
 whisper_env/
 venv/
 env/
@@ -16,6 +17,11 @@ ENV/
 
 # Vosk Model (large binary files)
 vosk_model/
+
+# Screenshots and images
+*.png
+*.jpg
+*.jpeg
 
 # IDE
 .vscode/
