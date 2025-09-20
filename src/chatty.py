@@ -10,6 +10,7 @@ import threading
 import time
 import math
 import random
+import os
 from datetime import datetime
 from vosk import Model, KaldiRecognizer
 import sounddevice as sd
@@ -71,12 +72,23 @@ class Chatty:
 
     def setup_model(self):
         """Load the Vosk model"""
-        model_path = "vosk_model/vosk-model-small-en-us-0.15"
+        # Get the directory where this script is located
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        # Get the project root (parent directory of src)
+        project_root = os.path.dirname(script_dir)
+        # Construct absolute path to model
+        model_path = os.path.join(project_root, "vosk_model", "vosk-model-small-en-us-0.15")
+        
+        self.model = None  # Initialize to None
         try:
             self.model = Model(model_path)
             print("✓ Vosk model loaded successfully")
         except Exception as e:
             print(f"❌ Error loading model: {e}")
+            print(f"❌ Attempted model path: {model_path}")
+            print(f"❌ Model directory exists: {os.path.exists(model_path)}")
+            if os.path.exists(project_root):
+                print(f"❌ Project root contents: {os.listdir(project_root)}")
             return
 
     def setup_ui(self):
@@ -193,6 +205,14 @@ class Chatty:
         if not self.audio_buffer:
             self.update_status("Ctrl: start", '#888888')
             print("No audio recorded")
+            return
+
+        # Check if model is loaded
+        if self.model is None:
+            print("❌ Cannot transcribe: Model not loaded")
+            self.update_status("Model not loaded!", '#ff0000')
+            time.sleep(2)
+            self.update_status("Ctrl: start", '#888888')
             return
 
         print("🔍 Transcribing...")
