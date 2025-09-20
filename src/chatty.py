@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Whisper - Voice-to-Text with animated interface
+Chatty - Voice-to-Text with animated interface
 Animated dots that bounce when speaking, with text display and smart controls
 """
 
@@ -19,7 +19,7 @@ import pyperclip
 import subprocess
 from pynput import keyboard
 
-class Whisper:
+class Chatty:
     def __init__(self, root):
         self.root = root
         self.setup_window()
@@ -32,7 +32,7 @@ class Whisper:
 
     def setup_window(self):
         """Configure the main window"""
-        self.root.title("🎙️ Whisper")
+        self.root.title("🎙️ Chatty")
         self.root.geometry("500x400")
         self.root.configure(bg='#1a1a1a')
         self.root.resizable(False, False)
@@ -86,7 +86,7 @@ class Whisper:
 
         # Title
         title_label = tk.Label(main_frame,
-                              text="Whisper",
+                              text="Chatty",
                               bg='#1a1a1a',
                               fg='#ffffff',
                               font=('Arial', 28, 'normal'))
@@ -428,7 +428,7 @@ class Whisper:
 def main():
     """Main function"""
     root = tk.Tk()
-    app = Whisper(root)
+    app = Chatty(root)
 
     # Handle window closing
     root.protocol("WM_DELETE_WINDOW", app.on_closing)

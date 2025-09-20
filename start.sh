@@ -1,7 +1,7 @@
 #!/bin/bash
-# Launcher script for Whisper
+# Launcher script for Chatty
 
-echo "🎙️ Starting Whisper..."
+echo "🎙️ Starting Chatty..."
 
 # Activate virtual environment
 source whisper_env/bin/activate
@@ -16,5 +16,5 @@ fi
 # Disable system beep
 xset -b 2>/dev/null || true
 
-# Run Whisper
-python3 src/whisper.py
+# Run Chatty
+python3 src/chatty.py

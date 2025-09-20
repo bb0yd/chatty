@@ -1,7 +1,7 @@
 #!/bin/bash
-# Whisper Installation Script
+# Chatty Installation Script
 
-echo "🎙️ Whisper Installation"
+echo "🎙️ Chatty Installation"
 echo "======================"
 
 # Install system dependencies
@@ -39,5 +39,5 @@ chmod +x start.sh
 echo ""
 echo "✅ Installation complete!"
 echo ""
-echo "To run Whisper:"
+echo "To run Chatty:"
 echo "  ./start.sh"

@@ -1,4 +1,4 @@
-# Whisper
+# Chatty
 
 Voice-to-text application with real-time animated interface.
 
@@ -16,7 +16,7 @@ Voice-to-text application with real-time animated interface.
 ./install.sh
 ```
 
-2. Run Whisper:
+2. Run Chatty:
 ```bash
 ./start.sh
 ```
@@ -30,9 +30,9 @@ Voice-to-text application with real-time animated interface.
 ## Project Structure
 
 ```
-whisper_project/
+chatty/
 ├── src/
-│   └── whisper.py       # Main application
+│   └── chatty.py        # Main application
 ├── vosk_model/          # Speech recognition model (40MB)
 ├── whisper_env/         # Python virtual environment
 ├── install.sh           # Installation script
