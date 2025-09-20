@@ -4,6 +4,16 @@
 echo "🔍 Chatty Desktop Integration Diagnostics"
 echo "========================================"
 
+# Check if icons directory exists
+if [ ! -d ~/.local/share/icons ]; then
+    echo "❌ Icons directory does not exist: ~/.local/share/icons"
+    echo "   This suggests the installer didn't run or failed."
+    echo "   Solution: Re-run ./install.sh and check for errors"
+    echo ""
+else
+    echo "✓ Icons directory exists: ~/.local/share/icons"
+fi
+
 # Check desktop file
 if [ -f ~/.local/share/applications/chatty.desktop ]; then
     echo "✓ Desktop file exists: ~/.local/share/applications/chatty.desktop"
@@ -32,7 +42,7 @@ fi
 if [ -f ~/.local/share/icons/chatty.png ]; then
     echo "✓ PNG icon exists: ~/.local/share/icons/chatty.png"
 else
-    echo "⚠ PNG icon missing (fallback)"
+    echo "❌ PNG icon missing (fallback)"
 fi
 
 # Check if start script exists and is executable
@@ -44,12 +54,19 @@ else
 fi
 
 echo ""
-echo "🛠️ Troubleshooting steps:"
-echo "1. Log out and log back in to refresh desktop environment"
-echo "2. Try: xdg-desktop-menu forceupdate"
+echo "🛠️ Troubleshooting steps for Ubuntu:"
+echo "1. If icons directory is missing, re-run: ./install.sh"
+echo "2. Log out and log back in to refresh desktop environment"
 echo "3. Try: update-desktop-database ~/.local/share/applications/"
-echo "4. Look for 'Chatty' in applications menu under 'AudioVideo' category"
-echo "5. Some desktop environments may take time to recognize new applications"
+echo "4. Try: xdg-desktop-menu forceupdate"
+echo "5. Look for 'Chatty' in applications menu under 'AudioVideo' or 'Sound & Video' category"
+echo "6. In Ubuntu, try searching for 'Chatty' in the Activities overview"
+
+echo ""
+echo "📋 Manual verification commands:"
+echo "   ls -la ~/.local/share/icons/chatty.*"
+echo "   ls -la ~/.local/share/applications/chatty.desktop"
+echo "   cat ~/.local/share/applications/chatty.desktop"
 
 echo ""
 echo "🖥️ Desktop environment detection:"
@@ -62,3 +79,7 @@ fi
 if [ -n "$XDG_SESSION_TYPE" ]; then
     echo "Session: $XDG_SESSION_TYPE"
 fi
+
+echo ""
+echo "🔄 Quick reinstall command:"
+echo "   ./install.sh && ./validate-desktop.sh"

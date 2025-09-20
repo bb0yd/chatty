@@ -42,23 +42,53 @@ echo "🖥️ Installing desktop launcher..."
 INSTALL_DIR="$(pwd)"
 
 # Create directories
-mkdir -p ~/.local/share/applications
-mkdir -p ~/.local/share/icons
+echo "  Creating directories..."
+mkdir -p ~/.local/share/applications || { echo "❌ Failed to create applications directory"; exit 1; }
+mkdir -p ~/.local/share/icons || { echo "❌ Failed to create icons directory"; exit 1; }
 
 # Copy icon to standard location
-cp chatty.svg ~/.local/share/icons/chatty.svg
+echo "  Installing icons..."
+if [ -f "chatty.svg" ]; then
+    cp chatty.svg ~/.local/share/icons/chatty.svg && echo "    ✓ SVG icon installed"
+else
+    echo "    ⚠ SVG icon not found"
+fi
+
 if [ -f "chatty.png" ]; then
-    cp chatty.png ~/.local/share/icons/chatty.png
+    cp chatty.png ~/.local/share/icons/chatty.png && echo "    ✓ PNG icon installed" 
+else
+    echo "    ⚠ PNG icon not found"
 fi
 
 # Create desktop file with correct paths
-sed "s|INSTALL_PATH|$INSTALL_DIR|g" chatty.desktop > ~/.local/share/applications/chatty.desktop
+echo "  Installing desktop file..."
+if sed "s|INSTALL_PATH|$INSTALL_DIR|g" chatty.desktop > ~/.local/share/applications/chatty.desktop; then
+    echo "    ✓ Desktop file created"
+else
+    echo "    ❌ Failed to create desktop file"
+    exit 1
+fi
 
 # Desktop files should NOT be executable
 chmod 644 ~/.local/share/applications/chatty.desktop
 
 echo "✓ Desktop launcher installed to ~/.local/share/applications/chatty.desktop"
-echo "✓ Icon installed to ~/.local/share/icons/chatty.svg"
+echo "✓ Icons installed to ~/.local/share/icons/"
+
+# Verify installation
+echo "  Verifying installation..."
+if [ -f ~/.local/share/applications/chatty.desktop ]; then
+    echo "    ✓ Desktop file exists"
+else
+    echo "    ❌ Desktop file missing"
+fi
+
+if [ -d ~/.local/share/icons ] && ls ~/.local/share/icons/chatty.* >/dev/null 2>&1; then
+    echo "    ✓ Icons directory exists with Chatty icons"
+    ls -la ~/.local/share/icons/chatty.*
+else
+    echo "    ❌ Icons missing or directory doesn't exist"
+fi
 
 # Update desktop database if available
 if command -v update-desktop-database &> /dev/null; then
