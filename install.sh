@@ -35,22 +35,51 @@ fi
 
 # Make scripts executable
 chmod +x start.sh
+chmod +x validate-desktop.sh
 
 # Install desktop file for GUI launcher
 echo "🖥️ Installing desktop launcher..."
 INSTALL_DIR="$(pwd)"
+
+# Create directories
 mkdir -p ~/.local/share/applications
+mkdir -p ~/.local/share/icons
+
+# Copy icon to standard location
+cp chatty.svg ~/.local/share/icons/chatty.svg
+if [ -f "chatty.png" ]; then
+    cp chatty.png ~/.local/share/icons/chatty.png
+fi
 
 # Create desktop file with correct paths
 sed "s|INSTALL_PATH|$INSTALL_DIR|g" chatty.desktop > ~/.local/share/applications/chatty.desktop
-chmod +x ~/.local/share/applications/chatty.desktop
+
+# Desktop files should NOT be executable
+chmod 644 ~/.local/share/applications/chatty.desktop
+
+echo "✓ Desktop launcher installed to ~/.local/share/applications/chatty.desktop"
+echo "✓ Icon installed to ~/.local/share/icons/chatty.svg"
 
 # Update desktop database if available
 if command -v update-desktop-database &> /dev/null; then
     update-desktop-database ~/.local/share/applications/ 2>/dev/null || true
+    echo "✓ Desktop database updated"
+else
+    echo "⚠ update-desktop-database not found, you may need to log out and back in"
 fi
 
-echo "✓ Desktop launcher installed"
+# Try to refresh the desktop environment
+if command -v gtk-update-icon-cache &> /dev/null; then
+    gtk-update-icon-cache ~/.local/share/icons/ 2>/dev/null || true
+    echo "✓ Icon cache updated"
+fi
+
+echo ""
+echo "🔍 Troubleshooting desktop launcher:"
+echo "  1. Log out and log back in to refresh the desktop environment"
+echo "  2. Look for 'Chatty' in your applications menu under 'AudioVideo' category"
+echo "  3. Desktop file location: ~/.local/share/applications/chatty.desktop"
+echo "  4. If icon doesn't appear, try: xdg-desktop-menu forceupdate"
 
 echo ""
 echo "✅ Installation complete!"
@@ -58,3 +87,6 @@ echo ""
 echo "To run Chatty:"
 echo "  ./start.sh"
 echo "  or click the Chatty icon in your applications menu"
+echo ""
+echo "If the desktop icon doesn't appear:"
+echo "  ./validate-desktop.sh    # Run diagnostics and troubleshooting"

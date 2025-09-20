@@ -66,6 +66,29 @@ Example for using Alt key:
 }
 ```
 
+## Desktop Launcher Troubleshooting
+
+If the Chatty icon doesn't appear in your applications menu after installation:
+
+1. **Run the diagnostic tool:**
+   ```bash
+   ./validate-desktop.sh
+   ```
+
+2. **Common fixes:**
+   - Log out and log back in to refresh your desktop environment
+   - Run: `update-desktop-database ~/.local/share/applications/`
+   - Run: `xdg-desktop-menu forceupdate`
+   - Look for "Chatty" under the "AudioVideo" category in your applications menu
+
+3. **Manual desktop file location:**
+   - Desktop file: `~/.local/share/applications/chatty.desktop`
+   - Icons: `~/.local/share/icons/chatty.svg` and `~/.local/share/icons/chatty.png`
+
+4. **Alternative launch methods:**
+   - Use `./start.sh` from the terminal
+   - Double-click the desktop file directly
+
 ## Project Structure
 
 ```
@@ -76,9 +99,11 @@ chatty/
 ├── chatty/              # Python virtual environment  
 ├── config.json          # Configuration file (hotkey settings)
 ├── chatty.desktop       # Desktop launcher template
-├── chatty.svg           # Application icon
+├── chatty.svg           # Application icon (SVG)
+├── chatty.png           # Application icon (PNG fallback)
 ├── install.sh           # Installation script
 ├── start.sh             # Launch script
+├── validate-desktop.sh  # Desktop integration diagnostics
 └── README.md           # This file
 ```
 
