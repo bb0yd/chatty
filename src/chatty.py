@@ -127,12 +127,24 @@ class Chatty:
         self.current_text = ""
         self.text_visible = False
 
-        # Audio level tracking
+        # Visual mode configuration
+        self.visual_modes = ['dots', 'waveform']
+        self.current_visual_mode = 0  # Index into visual_modes
+        self.visual_mode = self.visual_modes[self.current_visual_mode]
+
+        # Audio level tracking for dots mode
         self.audio_levels = [0, 0, 0, 0]  # 4 dots
         self.target_levels = [0, 0, 0, 0]
 
+        # Audio level tracking for waveform mode
+        self.waveform_history = []
+        self.waveform_length = 60  # Number of historical samples to keep
+        self.waveform_points = []
+
         # Key state tracking
         self.hotkey_pressed = False
+        self.ctrl_pressed = False
+        self.alt_pressed = False
 
     def setup_model(self):
         """Load the Vosk model"""
@@ -172,7 +184,7 @@ class Chatty:
 
         # Status text with better spacing
         self.status_label = tk.Label(main_frame,
-                                   text=f"{self.config['display_name']}: start",
+                                   text="Ctrl: start | Alt+V: visual",
                                    bg='#1a1a1a',
                                    fg='#888888',
                                    font=('Arial', 9))
@@ -182,7 +194,11 @@ class Chatty:
         self.text_frame = tk.Frame(main_frame, bg='#2a2a2a', relief='solid', bd=1)
 
         # Compact font for text
-        self.text_font = tkFont.Font(family='Arial', size=10)
+        try:
+            self.text_font = tkFont.Font(family='Arial', size=10)
+        except RuntimeError:
+            # Fallback for environments without proper tkinter setup
+            self.text_font = ('Arial', 10)
 
         self.text_label = tk.Label(self.text_frame,
                                  text="",
@@ -195,26 +211,44 @@ class Chatty:
         self.text_label.pack(padx=8, pady=8)
 
     def audio_callback(self, indata, frames, time, status):
-        """Audio stream callback with dot animation data"""
+        """Audio stream callback with animation data for different visual modes"""
         if status:
             self.debug_print(f"Audio stream error: {status}")
 
-        # Calculate audio levels for each dot
+        # Calculate audio levels
         audio_data = np.frombuffer(indata, dtype=np.float32)
         overall_level = np.sqrt(np.mean(audio_data**2)) * 200
 
         if self.recording:
             self.audio_buffer.extend(audio_data)
 
-            # Create different levels for each dot with some randomness
-            base_level = min(overall_level, 40)
-            for i in range(4):
-                variation = random.uniform(0.7, 1.3)
-                self.target_levels[i] = base_level * variation
+            if self.visual_mode == 'dots':
+                # Create different levels for each dot with some randomness
+                base_level = min(overall_level, 40)
+                for i in range(4):
+                    variation = random.uniform(0.7, 1.3)
+                    self.target_levels[i] = base_level * variation
+            
+            elif self.visual_mode == 'waveform':
+                # Add to waveform history
+                normalized_level = min(overall_level / 50.0, 1.0)  # Normalize to 0-1
+                self.waveform_history.append(normalized_level)
+                
+                # Keep only recent history
+                if len(self.waveform_history) > self.waveform_length:
+                    self.waveform_history.pop(0)
         else:
-            # Idle state - minimal movement
-            for i in range(4):
-                self.target_levels[i] = random.uniform(0, 2)
+            # Idle state
+            if self.visual_mode == 'dots':
+                # Minimal movement for dots
+                for i in range(4):
+                    self.target_levels[i] = random.uniform(0, 2)
+            
+            elif self.visual_mode == 'waveform':
+                # Add minimal noise to waveform
+                self.waveform_history.append(random.uniform(0, 0.1))
+                if len(self.waveform_history) > self.waveform_length:
+                    self.waveform_history.pop(0)
 
     def setup_audio(self):
         """Initialize audio stream"""
@@ -259,7 +293,7 @@ class Chatty:
     def process_audio(self):
         """Process recorded audio and transcribe"""
         if not self.audio_buffer:
-            self.update_status(self.get_status_text(), '#888888')
+            self.update_status("Ctrl: start | Alt+V: visual", '#888888')
             self.debug_print("No audio recorded")
             return
 
@@ -268,7 +302,7 @@ class Chatty:
             self.debug_print("❌ Cannot transcribe: Model not loaded")
             self.update_status("Model not loaded!", '#ff0000')
             time.sleep(2)
-            self.update_status(self.get_status_text(), '#888888')
+            self.update_status("Ctrl: start | Alt+V: visual", '#888888')
             return
 
         self.debug_print("🔍 Transcribing...")
@@ -303,13 +337,13 @@ class Chatty:
                 self.debug_print("🔇 No speech detected")
                 self.update_status("No speech. Try again.", '#ff6600')
                 time.sleep(2)
-                self.update_status(self.get_status_text(), '#888888')
+                self.update_status("Ctrl: start | Alt+V: visual", '#888888')
 
         except Exception as e:
             self.debug_print(f"❌ Transcription error: {e}")
             self.update_status("Error. Try again.", '#ff0000')
             time.sleep(2)
-            self.update_status(self.get_status_text(), '#888888')
+            self.update_status("Ctrl: start | Alt+V: visual", '#888888')
 
     def show_text(self, text):
         """Display transcribed text"""
@@ -323,7 +357,7 @@ class Chatty:
         self.text_visible = False
         self.current_text = ""
         self.text_frame.pack_forget()
-        self.update_status(self.get_status_text(), '#888888')
+        self.update_status("Ctrl: start | Alt+V: visual", '#888888')
         self.debug_print("🗑️ Text cleared")
 
     def auto_copy_after_delay(self):
@@ -372,6 +406,26 @@ class Chatty:
     def update_status(self, text, color='#888888'):
         """Update status display"""
         self.status_label.configure(text=text, fg=color)
+
+    def cycle_visual_mode(self):
+        """Cycle to the next visual mode"""
+        self.current_visual_mode = (self.current_visual_mode + 1) % len(self.visual_modes)
+        self.visual_mode = self.visual_modes[self.current_visual_mode]
+        
+        # Reset visualization data when switching modes
+        if self.visual_mode == 'waveform':
+            self.waveform_history = []
+        elif self.visual_mode == 'dots':
+            self.audio_levels = [0, 0, 0, 0]
+            self.target_levels = [0, 0, 0, 0]
+        
+        # Update status to show current mode
+        mode_name = self.visual_mode.capitalize()
+        self.update_status(f"Visual: {mode_name}", '#4A9EFF')
+        self.debug_print(f"🎨 Switched to {mode_name} mode")
+        
+        # Return to normal status after showing mode
+        self.root.after(2000, lambda: self.update_status("Ctrl: start | Alt+V: visual", '#888888'))
 
     def draw_animated_dots(self):
         """Draw compact animated dots"""
@@ -424,11 +478,102 @@ class Chatty:
                 fill=color, outline=''
             )
 
+    def draw_waveform(self):
+        """Draw flowing waveform visualization"""
+        self.dots_canvas.delete("all")
+
+        canvas_width = 120
+        canvas_height = 40
+        center_y = canvas_height // 2
+
+        if not self.waveform_history:
+            return
+
+        # Create flowing waveform based on audio history
+        points = []
+        num_points = min(len(self.waveform_history), 30)  # Limit points for smooth curves
+        
+        for i in range(num_points):
+            # X position spreads across canvas width
+            x = (i / max(num_points - 1, 1)) * canvas_width
+            
+            # Y position based on audio level with some animation
+            history_index = len(self.waveform_history) - num_points + i
+            if history_index >= 0:
+                level = self.waveform_history[history_index]
+                
+                # Add flowing animation
+                flow_offset = math.sin((self.frame_count * 0.1) + (i * 0.5)) * 0.1
+                level = max(0, min(1, level + flow_offset))
+                
+                # Convert to canvas coordinates
+                amplitude = level * (canvas_height * 0.4)  # Use 40% of canvas height
+                y = center_y + math.sin((x * 0.1) + (self.frame_count * 0.05)) * amplitude
+            else:
+                y = center_y
+            
+            points.extend([x, y])
+
+        # Draw the waveform as a smooth curve
+        if len(points) >= 4:  # Need at least 2 points (4 coordinates)
+            # Color based on state
+            if self.recording:
+                color = '#4A9EFF'  # Professional blue when recording
+                line_width = 2
+            else:
+                color = '#666666'  # Gray when idle
+                line_width = 1
+
+            # Draw the main waveform line
+            self.dots_canvas.create_line(
+                points,
+                fill=color,
+                width=line_width,
+                smooth=True,
+                capstyle='round'
+            )
+
+            # Add a subtle glow effect when recording
+            if self.recording and len(points) >= 4:
+                # Draw a slightly thicker line underneath for glow
+                self.dots_canvas.create_line(
+                    points,
+                    fill=color,
+                    width=line_width + 1,
+                    smooth=True,
+                    capstyle='round',
+                    state='disabled'  # Draw behind main line
+                )
+
+        # Add some flowing particles for extra effect when recording
+        if self.recording and len(self.waveform_history) > 5:
+            for i in range(3):  # 3 flowing particles
+                particle_x = ((self.frame_count + i * 40) % 150) * (canvas_width / 150)
+                
+                # Get amplitude at this x position
+                history_pos = int((particle_x / canvas_width) * len(self.waveform_history))
+                if 0 <= history_pos < len(self.waveform_history):
+                    level = self.waveform_history[history_pos]
+                    particle_y = center_y + math.sin(particle_x * 0.1) * (level * canvas_height * 0.3)
+                    
+                    # Draw small particle
+                    self.dots_canvas.create_oval(
+                        particle_x - 1, particle_y - 1,
+                        particle_x + 1, particle_y + 1,
+                        fill='#4A9EFF', outline='', stipple='gray25'
+                    )
+
     def animate(self):
         """Main animation loop"""
         if self.animation_running:
             self.frame_count += 1
-            self.draw_animated_dots()
+            
+            # Draw appropriate visualization based on current mode
+            if self.visual_mode == 'dots':
+                self.draw_animated_dots()
+            elif self.visual_mode == 'waveform':
+                self.draw_waveform()
+            
             self.root.after(50, self.animate)  # 20 FPS
 
     def start_animation(self):
@@ -447,6 +592,15 @@ class Chatty:
                         self.hotkey_pressed = True
                         self.root.after(0, self.toggle_recording)
 
+                # Alt key press (for visual mode cycling)
+                if key == keyboard.Key.alt_l or key == keyboard.Key.alt_r:
+                    if not self.alt_pressed:
+                        self.alt_pressed = True
+
+                # V key (with Alt) for visual mode cycling
+                if hasattr(key, 'char') and key.char == 'v' and self.alt_pressed:
+                    self.root.after(0, self.cycle_visual_mode)
+
                 # Escape key
                 if key == keyboard.Key.esc and not self.escape_pressed:
                     self.escape_pressed = True
@@ -462,6 +616,10 @@ class Chatty:
                 if key in hotkey_keys:
                     self.hotkey_pressed = False
 
+                # Release Alt key
+                if key == keyboard.Key.alt_l or key == keyboard.Key.alt_r:
+                    self.alt_pressed = False
+
                 # Release Escape
                 if key == keyboard.Key.esc:
                     self.escape_pressed = False
@@ -469,12 +627,16 @@ class Chatty:
             except AttributeError:
                 pass
 
-        self.keyboard_listener = keyboard.Listener(
-            on_press=on_key_press,
-            on_release=on_key_release
-        )
-        self.keyboard_listener.start()
-        self.debug_print("✓ Global hotkey listener started")
+        try:
+            self.keyboard_listener = keyboard.Listener(
+                on_press=on_key_press,
+                on_release=on_key_release
+            )
+            self.keyboard_listener.start()
+            self.debug_print("✓ Global hotkey listener started")
+        except Exception as e:
+            self.debug_print(f"⚠️ Could not start hotkey listener: {e}")
+            # Continue without hotkeys in test environments
 
     def on_closing(self):
         """Handle window closing"""
@@ -482,8 +644,11 @@ class Chatty:
         if self.audio_stream:
             self.audio_stream.stop()
             self.audio_stream.close()
-        if hasattr(self, 'keyboard_listener'):
-            self.keyboard_listener.stop()
+        if hasattr(self, 'keyboard_listener') and self.keyboard_listener:
+            try:
+                self.keyboard_listener.stop()
+            except:
+                pass  # May fail in test environments
         self.root.destroy()
 
 def main():
