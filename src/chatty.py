@@ -27,11 +27,68 @@ class Chatty:
         self.debug_mode = debug_mode
         self.setup_window()
         self.setup_variables()
+        self.load_config()
         self.setup_ui()
         self.setup_model()
         self.setup_audio()
         self.setup_hotkeys()
         self.start_animation()
+
+    def load_config(self):
+        """Load configuration from config.json"""
+        # Get the directory where this script is located
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        # Get the project root (parent directory of src)
+        project_root = os.path.dirname(script_dir)
+        config_path = os.path.join(project_root, "config.json")
+        
+        # Default configuration
+        self.config = {
+            "hotkey": "ctrl",
+            "display_name": "Ctrl"
+        }
+        
+        try:
+            if os.path.exists(config_path):
+                with open(config_path, 'r') as f:
+                    loaded_config = json.load(f)
+                    self.config.update(loaded_config)
+                self.debug_print(f"✓ Configuration loaded from {config_path}")
+            else:
+                self.debug_print(f"ℹ No config file found at {config_path}, using defaults")
+        except Exception as e:
+            self.debug_print(f"❌ Error loading config: {e}")
+        
+        self.debug_print(f"ℹ Using hotkey: {self.config['hotkey']} (display: {self.config['display_name']})")
+
+    def get_hotkey_keys(self):
+        """Convert hotkey string to keyboard key constants"""
+        hotkey = self.config["hotkey"].lower()
+        
+        if hotkey == "ctrl":
+            return [keyboard.Key.ctrl_l, keyboard.Key.ctrl_r]
+        elif hotkey == "alt":
+            return [keyboard.Key.alt_l, keyboard.Key.alt_r]
+        elif hotkey == "shift":
+            return [keyboard.Key.shift_l, keyboard.Key.shift_r]
+        elif hotkey == "space":
+            return [keyboard.Key.space]
+        elif hotkey == "f1":
+            return [keyboard.Key.f1]
+        elif hotkey == "f2":
+            return [keyboard.Key.f2]
+        elif hotkey == "f3":
+            return [keyboard.Key.f3]
+        elif hotkey == "f4":
+            return [keyboard.Key.f4]
+        else:
+            # Default to ctrl if unknown
+            self.debug_print(f"⚠ Unknown hotkey '{hotkey}', defaulting to ctrl")
+            return [keyboard.Key.ctrl_l, keyboard.Key.ctrl_r]
+
+    def get_status_text(self):
+        """Get the status text with the configured hotkey"""
+        return f"{self.config['display_name']}: start"
 
     def debug_print(self, message):
         """Print debug messages only if debug mode is enabled"""
@@ -75,7 +132,7 @@ class Chatty:
         self.target_levels = [0, 0, 0, 0]
 
         # Key state tracking
-        self.ctrl_pressed = False
+        self.hotkey_pressed = False
 
     def setup_model(self):
         """Load the Vosk model"""
@@ -115,7 +172,7 @@ class Chatty:
 
         # Status text with better spacing
         self.status_label = tk.Label(main_frame,
-                                   text="Ctrl: start",
+                                   text=f"{self.config['display_name']}: start",
                                    bg='#1a1a1a',
                                    fg='#888888',
                                    font=('Arial', 9))
@@ -202,7 +259,7 @@ class Chatty:
     def process_audio(self):
         """Process recorded audio and transcribe"""
         if not self.audio_buffer:
-            self.update_status("Ctrl: start", '#888888')
+            self.update_status(self.get_status_text(), '#888888')
             self.debug_print("No audio recorded")
             return
 
@@ -211,7 +268,7 @@ class Chatty:
             self.debug_print("❌ Cannot transcribe: Model not loaded")
             self.update_status("Model not loaded!", '#ff0000')
             time.sleep(2)
-            self.update_status("Ctrl: start", '#888888')
+            self.update_status(self.get_status_text(), '#888888')
             return
 
         self.debug_print("🔍 Transcribing...")
@@ -246,13 +303,13 @@ class Chatty:
                 self.debug_print("🔇 No speech detected")
                 self.update_status("No speech. Try again.", '#ff6600')
                 time.sleep(2)
-                self.update_status("Ctrl: start", '#888888')
+                self.update_status(self.get_status_text(), '#888888')
 
         except Exception as e:
             self.debug_print(f"❌ Transcription error: {e}")
             self.update_status("Error. Try again.", '#ff0000')
             time.sleep(2)
-            self.update_status("Ctrl: start", '#888888')
+            self.update_status(self.get_status_text(), '#888888')
 
     def show_text(self, text):
         """Display transcribed text"""
@@ -266,7 +323,7 @@ class Chatty:
         self.text_visible = False
         self.current_text = ""
         self.text_frame.pack_forget()
-        self.update_status("Ctrl: start", '#888888')
+        self.update_status(self.get_status_text(), '#888888')
         self.debug_print("🗑️ Text cleared")
 
     def auto_copy_after_delay(self):
@@ -380,12 +437,14 @@ class Chatty:
 
     def setup_hotkeys(self):
         """Setup global hotkey listener"""
+        hotkey_keys = self.get_hotkey_keys()
+        
         def on_key_press(key):
             try:
-                # Ctrl key press
-                if key == keyboard.Key.ctrl_l or key == keyboard.Key.ctrl_r:
-                    if not self.ctrl_pressed:
-                        self.ctrl_pressed = True
+                # Configured hotkey press
+                if key in hotkey_keys:
+                    if not self.hotkey_pressed:
+                        self.hotkey_pressed = True
                         self.root.after(0, self.toggle_recording)
 
                 # Escape key
@@ -399,9 +458,9 @@ class Chatty:
 
         def on_key_release(key):
             try:
-                # Release Ctrl key
-                if key == keyboard.Key.ctrl_l or key == keyboard.Key.ctrl_r:
-                    self.ctrl_pressed = False
+                # Release configured hotkey
+                if key in hotkey_keys:
+                    self.hotkey_pressed = False
 
                 # Release Escape
                 if key == keyboard.Key.esc:

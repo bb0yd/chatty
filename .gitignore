@@ -23,6 +23,9 @@ vosk_model/
 *.jpg
 *.jpeg
 
+# Exception: Include application icon
+!chatty.png
+
 # IDE
 .vscode/
 .idea/

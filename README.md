@@ -6,7 +6,8 @@ Voice-to-text application with real-time animated interface.
 
 - **Compact Interface** - Small 220×140 window positioned in top-right corner
 - **Animated Interface** - 4 bouncing dots that react to voice levels
-- **Simple Controls** - Just use Ctrl key to toggle recording
+- **Configurable Hotkeys** - Customize the recording trigger key (Ctrl, Alt, Space, F1-F4)
+- **Desktop Integration** - Install as desktop application with icon launcher
 - **Auto-paste** - Transcribed text automatically types at cursor location
 - **Offline** - Uses Vosk for local speech recognition
 - **Always on Top** - Stays visible above other windows
@@ -23,11 +24,70 @@ Voice-to-text application with real-time animated interface.
 ./start.sh
 ```
 
+Or click the **Chatty** icon in your applications menu (after installation).
+
 ## Usage
 
-1. **Press Ctrl** - Start recording (dots turn green)
-2. **Press Ctrl again** - Stop and auto-paste text
+1. **Press hotkey** (default: Ctrl) - Start recording (dots turn green)
+2. **Press hotkey again** - Stop and auto-paste text
 3. **Press Escape** - Cancel/clear text
+
+## Configuration
+
+Chatty supports configurable hotkeys through the `config.json` file. The default configuration uses the Ctrl key:
+
+```json
+{
+  "hotkey": "ctrl",
+  "display_name": "Ctrl"
+}
+```
+
+### Supported Hotkeys
+
+- **ctrl** - Left or Right Ctrl key (default)
+- **alt** - Left or Right Alt key  
+- **shift** - Left or Right Shift key
+- **space** - Spacebar
+- **f1** through **f4** - Function keys
+
+### Changing the Hotkey
+
+1. Edit `config.json` in the installation directory
+2. Set `"hotkey"` to your preferred key
+3. Set `"display_name"` to how you want it shown in the UI
+4. Restart Chatty
+
+Example for using Alt key:
+```json
+{
+  "hotkey": "alt", 
+  "display_name": "Alt"
+}
+```
+
+## Desktop Launcher Troubleshooting
+
+If the Chatty icon doesn't appear in your applications menu after installation:
+
+1. **Run the diagnostic tool:**
+   ```bash
+   ./validate-desktop.sh
+   ```
+
+2. **Common fixes:**
+   - Log out and log back in to refresh your desktop environment
+   - Run: `update-desktop-database ~/.local/share/applications/`
+   - Run: `xdg-desktop-menu forceupdate`
+   - Look for "Chatty" under the "AudioVideo" category in your applications menu
+
+3. **Manual desktop file location:**
+   - Desktop file: `~/.local/share/applications/chatty.desktop`
+   - Icons: `~/.local/share/icons/chatty.svg` and `~/.local/share/icons/chatty.png`
+
+4. **Alternative launch methods:**
+   - Use `./start.sh` from the terminal
+   - Double-click the desktop file directly
 
 ## Project Structure
 
@@ -36,9 +96,14 @@ chatty/
 ├── src/
 │   └── chatty.py        # Main application
 ├── vosk_model/          # Speech recognition model (40MB)
-├── whisper_env/         # Python virtual environment
+├── chatty/              # Python virtual environment  
+├── config.json          # Configuration file (hotkey settings)
+├── chatty.desktop       # Desktop launcher template
+├── chatty.svg           # Application icon (SVG)
+├── chatty.png           # Application icon (PNG fallback)
 ├── install.sh           # Installation script
 ├── start.sh             # Launch script
+├── validate-desktop.sh  # Desktop integration diagnostics
 └── README.md           # This file
 ```
 

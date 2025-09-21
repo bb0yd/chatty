@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="24" cy="24" r="22" fill="#1a1a1a" stroke="#4A9EFF" stroke-width="2"/>
+  
+  <!-- Microphone icon -->
+  <rect x="20" y="14" width="8" height="12" rx="4" fill="#4A9EFF"/>
+  <rect x="22" y="26" width="4" height="6" fill="#4A9EFF"/>
+  <rect x="18" y="30" width="12" height="2" fill="#4A9EFF"/>
+  
+  <!-- Sound waves -->
+  <path d="M32 20 Q36 24 32 28" stroke="#4A9EFF" stroke-width="2" fill="none"/>
+  <path d="M34 18 Q40 24 34 30" stroke="#4A9EFF" stroke-width="2" fill="none"/>
+  
+  <path d="M16 20 Q12 24 16 28" stroke="#4A9EFF" stroke-width="2" fill="none"/>
+  <path d="M14 18 Q8 24 14 30" stroke="#4A9EFF" stroke-width="2" fill="none"/>
+</svg>
