@@ -136,7 +136,11 @@ class Chatty:
         self.text_frame = tk.Frame(main_frame, bg='#2a2a2a', relief='solid', bd=1)
 
         # Compact font for text
-        self.text_font = tkFont.Font(family='Arial', size=10)
+        try:
+            self.text_font = tkFont.Font(family='Arial', size=10)
+        except RuntimeError:
+            # Fallback for environments without proper tkinter setup
+            self.text_font = ('Arial', 10)
 
         self.text_label = tk.Label(self.text_frame,
                                  text="",
@@ -563,12 +567,16 @@ class Chatty:
             except AttributeError:
                 pass
 
-        self.keyboard_listener = keyboard.Listener(
-            on_press=on_key_press,
-            on_release=on_key_release
-        )
-        self.keyboard_listener.start()
-        self.debug_print("✓ Global hotkey listener started")
+        try:
+            self.keyboard_listener = keyboard.Listener(
+                on_press=on_key_press,
+                on_release=on_key_release
+            )
+            self.keyboard_listener.start()
+            self.debug_print("✓ Global hotkey listener started")
+        except Exception as e:
+            self.debug_print(f"⚠️ Could not start hotkey listener: {e}")
+            # Continue without hotkeys in test environments
 
     def on_closing(self):
         """Handle window closing"""
@@ -576,8 +584,11 @@ class Chatty:
         if self.audio_stream:
             self.audio_stream.stop()
             self.audio_stream.close()
-        if hasattr(self, 'keyboard_listener'):
-            self.keyboard_listener.stop()
+        if hasattr(self, 'keyboard_listener') and self.keyboard_listener:
+            try:
+                self.keyboard_listener.stop()
+            except:
+                pass  # May fail in test environments
         self.root.destroy()
 
 def main():

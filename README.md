@@ -5,7 +5,8 @@ Voice-to-text application with real-time animated interface.
 ## Features
 
 - **Compact Interface** - Small 220×140 window positioned in top-right corner
-- **Animated Interface** - 4 bouncing dots that react to voice levels
+- **Visual Options** - Choose between animated dots or flowing waveform visualization
+- **Audio-Reactive** - Visual elements respond dynamically to voice levels
 - **Simple Controls** - Just use Ctrl key to toggle recording
 - **Auto-paste** - Transcribed text automatically types at cursor location
 - **Offline** - Uses Vosk for local speech recognition
@@ -25,9 +26,16 @@ Voice-to-text application with real-time animated interface.
 
 ## Usage
 
-1. **Press Ctrl** - Start recording (dots turn green)
+1. **Press Ctrl** - Start recording (visual elements turn blue and react to voice)
 2. **Press Ctrl again** - Stop and auto-paste text
-3. **Press Escape** - Cancel/clear text
+3. **Press Alt+V** - Cycle between visual modes (dots ↔ waveform)
+4. **Press Escape** - Cancel/clear text
+
+### Visual Modes
+
+**Dots Mode** (default): Four animated dots that bounce and change size based on audio levels. Classic, compact visualization.
+
+**Waveform Mode**: Flowing waveform with smooth curves and floating particles. Inspired by modern voice assistants, provides a dynamic audio visualization.
 
 ## Project Structure
 
